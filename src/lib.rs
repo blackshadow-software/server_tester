@@ -4,6 +4,7 @@ pub mod performance;
 pub mod security;
 pub mod network;
 pub mod cli;
+pub mod web_server;
 
 pub use http_client::*;
 pub use load_tester::*;
@@ -11,6 +12,7 @@ pub use performance::*;
 pub use security::*;
 pub use network::*;
 pub use cli::*;
+pub use web_server::*;
 
 #[cfg(test)]
 mod tests {

@@ -263,6 +263,13 @@ pub enum Commands {
         #[arg(short, long, default_value = "30")]
         spike_duration: u64,
     },
+    
+    /// Start web server
+    Server {
+        /// Port to run the server on
+        #[arg(short, long, default_value = "8080")]
+        port: u16,
+    },
 }
 
 pub async fn run_cli() -> Result<()> {
@@ -325,6 +332,10 @@ pub async fn run_cli() -> Result<()> {
             url, normal_load, spike_load, spike_duration 
         } => {
             run_spike_test(url, normal_load, spike_load, spike_duration).await?;
+        }
+        
+        Commands::Server { port } => {
+            run_web_server(port).await?;
         }
     }
     
@@ -776,6 +787,22 @@ async fn run_spike_test(
     println!("Average Response Time: {:.2} ms", result.average_response_time_ms);
     
     Ok(())
+}
+
+async fn run_web_server(port: u16) -> Result<()> {
+    use crate::web_server::start_server;
+    println!("🚀 Starting Security Tester Web Server on port {}", port);
+    println!("🌐 Access the web interface at: http://localhost:{}", port);
+    println!("📖 API Documentation:");
+    println!("   POST /api/test/xss - Test XSS vulnerabilities");
+    println!("   POST /api/test/csrf - Test CSRF vulnerabilities");
+    println!("   POST /api/test/ssl - Test SSL/TLS configuration");
+    println!("   POST /api/test/headers - Test security headers");
+    println!("   POST /api/test/sql-injection - Test SQL injection");
+    println!("   POST /api/test/all-security - Run all security tests");
+    println!("   GET  /api/health - Health check");
+    println!();
+    start_server(port).await
 }
 
 #[cfg(test)]
