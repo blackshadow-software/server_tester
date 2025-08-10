@@ -129,184 +129,175 @@ cargo build --release
 ./target/release/server_tester spike --url https://api.example.com --normal-load 10 --spike-load 100
 ```
 
-## Testing Approaches Implemented
+## Security Testing Methodologies
 
-### 1. **Functional Testing**
-- API endpoint validation
-- Request/response testing
-- Integration testing
-- End-to-end workflows
+This framework focuses on comprehensive security testing approaches to identify vulnerabilities and ensure robust application security. Each testing method targets specific security weaknesses and follows proven methodologies.
 
-### 2. **Performance Testing**
-- **Load Testing**: Normal expected traffic simulation
-- **Stress Testing**: Beyond normal capacity until failure
-- **Spike Testing**: Sudden traffic increases
-- **Volume Testing**: Large amounts of data processing
-- **Endurance Testing**: Extended time periods
+### 1. **Authentication Bypass Detection**
 
-### 3. **Security Testing**
-- Authentication vulnerabilities
-- Authorization bypasses
-- Input validation flaws
-- SQL injection attempts
-- Cross-site scripting (XSS)
-- Cross-site request forgery (CSRF)
-- Security header analysis
-- SSL/TLS configuration
+**Purpose and Critical Importance:**
+Authentication bypass detection identifies weaknesses in login mechanisms that could allow unauthorized access to systems without proper credentials. This is fundamental security testing as authentication is the first line of defense.
 
-### 4. **Network Testing**
-- Port availability scanning
-- DNS resolution performance
-- Connection establishment
-- Latency measurement
-- Bandwidth utilization
+**How it works:**
+The testing process systematically attempts to circumvent authentication mechanisms using various techniques. This includes testing default credentials, attempting to access restricted resources without authentication, manipulating authentication tokens, exploiting session management flaws, and testing for weak password policies. The system's response to each bypass attempt is carefully analyzed to identify vulnerabilities.
 
-## Configuration
+**Detection techniques:**
+- **Direct URL Access**: Attempting to access protected resources by directly navigating to URLs without logging in
+- **Session Token Manipulation**: Modifying, removing, or forging authentication tokens to gain unauthorized access
+- **Parameter Tampering**: Altering authentication parameters in requests to bypass login requirements
+- **Default Credential Testing**: Trying common username/password combinations and default system credentials
+- **Authentication Logic Flaws**: Exploiting weaknesses in the authentication workflow or business logic
+- **Brute Force Resistance**: Testing account lockout mechanisms and rate limiting effectiveness
 
-### Load Test Configuration
+**Vulnerability indicators:**
+Authentication bypass vulnerabilities are indicated by successful access to protected resources without proper authentication, weak account lockout policies, predictable session tokens, or errors that reveal system information.
 
-```rust
-let config = LoadTestConfig {
-    concurrent_users: 50,           // Number of concurrent virtual users
-    total_requests: 1000,           // Total requests to send
-    duration_seconds: Some(300),    // Test duration (alternative to total_requests)
-    ramp_up_seconds: 30,           // Time to reach full load
-    think_time_ms: 1000,           // Delay between requests per user
-    base_url: "https://api.example.com".to_string(),
-    requests: vec![/* test scenarios */],
-};
-```
+---
 
-### Security Test Configuration
+### 2. **Authorization Testing**
 
-```rust
-let config = SecurityTestConfig {
-    base_url: "https://api.example.com".to_string(),
-    test_authentication: true,      // Test auth bypasses
-    test_authorization: true,       // Test privilege escalation
-    test_input_validation: true,    // Test input sanitization
-    test_sql_injection: true,       // Test SQL injection
-    test_xss: true,                // Test XSS vulnerabilities
-    test_csrf: true,               // Test CSRF protection
-    test_security_headers: true,    // Test security headers
-    test_ssl_tls: true,            // Test SSL/TLS config
-    auth_token: Some("token".to_string()),
-    test_endpoints: vec!["/api/users".to_string()],
-};
-```
+**Purpose and Security Focus:**
+Authorization testing ensures that authenticated users can only access resources and perform actions they are explicitly permitted to. This prevents privilege escalation and unauthorized access to sensitive data or functionality.
 
-## Examples
+**How it works:**
+The testing methodology involves creating multiple user accounts with different permission levels and systematically attempting to access resources and functions beyond each user's authorized scope. This includes testing role-based access controls, resource-level permissions, and function-level security. Both horizontal privilege escalation (accessing other users' data) and vertical privilege escalation (gaining administrative privileges) are thoroughly tested.
 
-Run the comprehensive example:
+**Testing approaches:**
+- **Role-based Access Control Testing**: Verifying that users can only access resources appropriate to their assigned roles
+- **Horizontal Privilege Escalation**: Attempting to access another user's data or resources at the same privilege level
+- **Vertical Privilege Escalation**: Trying to gain higher-level permissions or administrative access
+- **Resource-level Permissions**: Testing access controls on individual files, database records, or API endpoints
+- **Function-level Authorization**: Verifying that administrative functions are properly restricted
+- **Parameter Manipulation**: Modifying user IDs, account numbers, or other identifiers in requests
 
-```bash
-cargo run --example basic_usage
-```
+**Vulnerability detection:**
+Authorization flaws are revealed when users can access resources they shouldn't, perform unauthorized actions, view other users' data, or execute administrative functions without proper permissions.
 
-This will demonstrate all testing approaches against a test API.
+---
 
-## Running Tests
+### 3. **Input Validation Checks**
 
-```bash
-# Unit tests
-cargo test
+**Purpose and Protection Scope:**
+Input validation testing ensures that all user inputs are properly sanitized, validated, and handled to prevent injection attacks, data corruption, and system compromise. This is critical as improper input handling is a common vulnerability source.
 
-# Integration tests
-cargo test --test integration_tests
+**How it works:**
+The testing process involves submitting various types of malicious and malformed inputs to all input fields, parameters, and interfaces throughout the application. This includes testing with oversized inputs, special characters, different encoding formats, boundary values, and completely invalid data types. Each input scenario is designed to test specific validation mechanisms and identify weaknesses in input handling.
 
-# Benchmarks
-cargo bench
+**Validation testing categories:**
+- **Data Type Validation**: Submitting wrong data types (text where numbers expected, etc.) to test type checking
+- **Length Validation**: Testing with inputs exceeding expected maximum lengths to identify buffer overflow risks
+- **Format Validation**: Providing incorrectly formatted data (invalid emails, dates, phone numbers) to test format checking
+- **Special Character Handling**: Using characters with special meaning in various contexts (quotes, brackets, semicolons)
+- **Encoding Attacks**: Testing different character encodings to bypass validation filters
+- **Boundary Value Testing**: Using minimum and maximum allowed values plus edge cases
+- **Null Value Testing**: Submitting empty, null, or undefined values where data is expected
 
-# All tests with output
-cargo test -- --nocapture
-```
+**Vulnerability identification:**
+Input validation flaws are detected when the system crashes, returns error messages revealing system information, processes invalid data incorrectly, or exhibits unexpected behavior with malformed inputs.
 
-## Metrics and Reporting
+---
 
-The framework provides detailed metrics for all testing types:
+### 4. **SQL Injection Detection**
 
-### Load Testing Metrics
-- Total/successful/failed requests
-- Response time statistics (min, max, avg, percentiles)
-- Requests per second
-- Error rate and status code distribution
+**Purpose and Attack Prevention:**
+SQL injection testing identifies vulnerabilities where malicious SQL code can be executed through application inputs, potentially allowing unauthorized database access, data theft, or database manipulation.
 
-### Performance Metrics
-- Throughput (RPS)
-- Latency distribution
-- Connection metrics
-- Resource utilization
+**How it works:**
+The testing methodology involves systematically inserting SQL code fragments into all input fields that interact with databases. Various SQL injection techniques are employed, including union-based injection, boolean-based blind injection, time-based blind injection, and error-based injection. The application's responses are carefully analyzed to determine if injected SQL code was executed, indicating a vulnerability.
 
-### Security Results
-- Vulnerability count by severity
-- Security score calculation
-- Detailed remediation recommendations
+**Injection testing techniques:**
+- **Classic SQL Injection**: Directly inserting SQL commands into input fields to manipulate database queries
+- **Blind SQL Injection**: Using conditional statements to infer database information when direct output isn't visible
+- **Time-based SQL Injection**: Using SQL functions that cause delays to confirm code execution
+- **Union-based Injection**: Using SQL UNION statements to extract data from different database tables
+- **Error-based Injection**: Triggering database errors that reveal system information or data
+- **Second-order SQL Injection**: Injecting code that gets stored and executed later by the application
 
-### Network Analysis
-- Port scan results
-- DNS resolution performance
-- Connection success rates
-- Latency statistics
+**Detection indicators:**
+SQL injection vulnerabilities are identified through database errors in responses, unexpected data in output, application timeouts from time-based attacks, or successful extraction of unauthorized database information.
 
-## Dependencies
+---
 
-- `reqwest` - HTTP client
-- `tokio` - Async runtime
-- `serde` - Serialization
-- `clap` - CLI interface
-- `tracing` - Logging
-- `histogram` - Statistics
-- `criterion` - Benchmarking (dev)
-- `mockito` - Testing (dev)
+### 5. **XSS Vulnerability Scanning**
 
-## Architecture
+**Purpose and Cross-Site Scripting Prevention:**
+XSS vulnerability scanning identifies weaknesses where malicious scripts can be injected into web applications and executed by other users' browsers, potentially stealing sensitive information or performing unauthorized actions.
 
-The project is structured into modular components:
+**How it works:**
+The scanning process involves submitting various JavaScript and HTML payloads through all possible input vectors including form fields, URL parameters, headers, and file uploads. Different encoding techniques and payload variations are used to bypass input filters. The application's output is examined to determine if injected scripts are executed or properly neutralized.
 
-```
-src/
-├── lib.rs              # Main library interface
-├── http_client.rs      # HTTP testing functionality
-├── load_tester.rs      # Load testing implementation
-├── performance.rs      # Performance benchmarking
-├── security.rs         # Security vulnerability testing
-├── network.rs          # Network testing tools
-├── cli.rs             # Command-line interface
-└── main.rs            # CLI binary entry point
+**XSS testing categories:**
+- **Reflected XSS**: Testing inputs that are immediately reflected back in the response, potentially executing in users' browsers
+- **Stored XSS**: Injecting scripts that get saved in the application and executed when viewed by other users
+- **DOM-based XSS**: Testing client-side script vulnerabilities where malicious code manipulates the Document Object Model
+- **Filter Bypass Testing**: Using various encoding techniques and payload variations to circumvent input sanitization
+- **Context-specific Testing**: Testing script injection in different HTML contexts (attributes, JavaScript, CSS)
+- **Polyglot Payloads**: Using payloads that work in multiple contexts to maximize attack surface coverage
 
-tests/
-└── integration_tests.rs  # Integration test examples
+**Vulnerability confirmation:**
+XSS vulnerabilities are confirmed when injected scripts execute in the browser, when script tags appear unescaped in HTML output, or when alert boxes or other JavaScript functions are triggered by payloads.
 
-benches/
-└── performance_bench.rs   # Performance benchmarks
+---
 
-examples/
-└── basic_usage.rs         # Comprehensive usage example
-```
+### 6. **CSRF Protection Testing**
 
-## Contributing
+**Purpose and Attack Prevention:**
+CSRF (Cross-Site Request Forgery) protection testing verifies that applications properly prevent malicious websites from performing unauthorized actions on behalf of authenticated users without their knowledge or consent.
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+**How it works:**
+The testing process involves creating malicious web pages or forms that attempt to submit requests to the target application using the victim's authentication session. Various CSRF attack scenarios are tested, including GET-based attacks through malicious links and POST-based attacks through hidden forms. The application's CSRF protection mechanisms are evaluated for effectiveness.
 
-## License
+**CSRF testing methodology:**
+- **Token Validation Testing**: Verifying that CSRF tokens are properly generated, validated, and required for sensitive operations
+- **Referer Header Checking**: Testing whether the application properly validates the HTTP Referer header
+- **Same-Site Cookie Testing**: Evaluating SameSite cookie attributes and their effectiveness against CSRF attacks
+- **State-changing Operation Testing**: Focusing on operations that modify data or system state
+- **Authentication Context Testing**: Ensuring CSRF protection works correctly with different authentication methods
+- **Cross-origin Request Testing**: Verifying protection against requests from different domains
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+**Protection validation:**
+CSRF protection effectiveness is confirmed when unauthorized cross-site requests are properly rejected, when missing or invalid CSRF tokens prevent request processing, and when legitimate same-origin requests continue to work normally.
 
-## Roadmap
+---
 
-- [ ] WebSocket testing support
-- [ ] GraphQL API testing
-- [ ] Database performance testing
-- [ ] Container/Docker integration
-- [ ] CI/CD pipeline integration
-- [ ] HTML report generation
-- [ ] Real-time monitoring dashboard
-- [ ] Plugin system for custom tests
+### 7. **Security Header Analysis**
 
-## Support
+**Purpose and Header Validation:**
+Security header analysis examines HTTP response headers to ensure proper security policies are implemented, protecting against various client-side attacks and enforcing security best practices.
 
-For questions, issues, or contributions, please visit the [GitHub repository](https://github.com/your-username/server_tester).
+**How it works:**
+The analysis process involves examining all HTTP responses from the application to identify the presence, absence, and configuration of security-related headers. Each header's value is validated against security best practices and known attack mitigation techniques. The effectiveness of header policies is tested through various attack scenarios.
+
+**Header analysis categories:**
+- **Content Security Policy (CSP)**: Analyzing CSP directives to ensure they effectively prevent XSS and other injection attacks
+- **X-Frame-Options**: Verifying protection against clickjacking attacks through frame embedding restrictions
+- **X-XSS-Protection**: Checking browser XSS filter activation (though deprecated, still relevant for older browsers)
+- **Strict-Transport-Security**: Validating HTTPS enforcement and HSTS policy configuration
+- **X-Content-Type-Options**: Ensuring MIME type sniffing protection is enabled
+- **Referrer-Policy**: Analyzing referrer information leakage controls
+- **Feature-Policy/Permissions-Policy**: Examining feature access controls and permissions
+
+**Security assessment:**
+Header security is evaluated by identifying missing critical headers, analyzing header values for proper configuration, testing policy enforcement effectiveness, and verifying that security headers don't interfere with legitimate application functionality.
+
+---
+
+### 8. **SSL/TLS Configuration Testing**
+
+**Purpose and Encryption Validation:**
+SSL/TLS configuration testing validates the security of encrypted communications between clients and servers, ensuring that data in transit is properly protected against eavesdropping and man-in-the-middle attacks.
+
+**How it works:**
+The testing process involves comprehensive analysis of the SSL/TLS implementation, including certificate validation, supported protocol versions, cipher suite strength, and various configuration parameters. Different client configurations and attack scenarios are tested to identify potential weaknesses in the encryption setup.
+
+**Configuration testing aspects:**
+- **Certificate Validation**: Verifying certificate authenticity, expiration dates, proper certificate chains, and domain name matching
+- **Protocol Version Testing**: Checking support for secure protocol versions and absence of deprecated versions (SSLv3, early TLS versions)
+- **Cipher Suite Analysis**: Evaluating the strength of supported encryption algorithms and key exchange methods
+- **Perfect Forward Secrecy**: Testing for ephemeral key exchange support to ensure session key security
+- **Certificate Transparency**: Verifying certificate transparency log compliance for additional security
+- **OCSP Stapling**: Testing Online Certificate Status Protocol implementation for revocation checking
+- **Vulnerability Testing**: Checking for known SSL/TLS vulnerabilities like Heartbleed, POODLE, or BEAST
+
+**Security validation:**
+SSL/TLS security is confirmed through successful certificate chain validation, strong cipher suite negotiation, proper protocol version enforcement, absence of known vulnerabilities, and effective protection against common SSL/TLS attacks.
